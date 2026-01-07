@@ -47,9 +47,11 @@
       background-repeat: no-repeat;
       color: var(--ink);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 1.25rem;
+      gap: 1.2rem;
       overflow: hidden;
     }
 
@@ -433,6 +435,33 @@
       height: 16px;
       color: var(--accent-2);
     }
+
+    footer {
+      width: min(1100px, 100%);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.01em;
+    }
+
+    .footer-link {
+      color: var(--ink);
+      text-decoration: none;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      background: linear-gradient(120deg, rgba(249, 168, 38, 0.3), rgba(58, 230, 215, 0.28));
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+      transition: color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .footer-link:hover,
+    .footer-link:focus-visible {
+      color: #0b0f1d;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 12px 25px rgba(58, 230, 215, 0.2);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
   <body>
@@ -515,6 +544,10 @@
       </form>
     </section>
   </main>
+  <footer>
+    Website built by
+    <a class="footer-link" href="https://www.buildyoursnow.com">BUILDYOURSNOW, LLC</a>.
+  </footer>
 
   <script>
     (() => {
@@ -524,8 +557,8 @@
       const messageField = document.getElementById("message");
       const humanField = document.getElementById("human");
       const trapField = document.getElementById("company");
-      const recipient = ["ivyhrs27", "gmail.com"].join("@");
       const dots = document.querySelector(".graphic-dots");
+      const endpoint = "https://formsubmit.co/ajax/ivyhrs27@gmail.com";
 
       if (dots) {
         const total = 72;
@@ -568,14 +601,36 @@
 
         setStatus("Sending...", "");
 
-        const subject = encodeURIComponent("StopMelt domains inquiry");
-        const body = encodeURIComponent(`From: ${email}\n\nMessage:\n${message}`);
-        const mailtoUrl = `mailto:${recipient}?subject=${subject}&body=${body}`;
-
-        // Hand off to user's email client while keeping the page in place.
-        window.location.href = mailtoUrl;
-        form.reset();
-        setStatus("Sent—watch for our reply about the sale.", "success");
+        fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            message,
+            sum: human,
+            source: "stopmelt-offer",
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.success === "true") {
+              setStatus("Sent—watch for our reply about the sale.", "success");
+              form.reset();
+            } else {
+              throw new Error("Submission was not accepted");
+            }
+          })
+          .catch(() => {
+            setStatus("Could not send right now. Please email ivyhrs27@gmail.com directly.", "error");
+          });
       });
     })();
   </script>
